@@ -7,6 +7,34 @@ use App\Models\Upload;
 use Maatwebsite\Excel\Facades\Excel;
 use Smalot\PdfParser\Parser;
 
+/**
+ * @OA\Get(
+ *     path="/api/uploads",
+ *     tags={"Uploads"},
+ *     summary="Ambil semua upload",
+ *     security={{"sanctum":{}}},
+ *     @OA\Response(response=200, description="Berhasil")
+ * )
+ */
+
+/**
+ * @OA\Post(
+ *     path="/api/upload",
+ *     tags={"Uploads"},
+ *     summary="Upload file",
+ *     security={{"sanctum":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"file_name","type"},
+ *             @OA\Property(property="file_name", type="string", example="laporan.pdf"),
+ *             @OA\Property(property="type", type="string", example="finance")
+ *         )
+ *     ),
+ *     @OA\Response(response=200, description="Upload berhasil")
+ * )
+ */
+
 class UploadController extends Controller
 {
     public function index(Request $request)
@@ -34,6 +62,8 @@ class UploadController extends Controller
             'type'      => $request->type
         ]);
 
+        $upload->load('user');
+
         $ext = strtolower($file->getClientOriginalExtension());
 
         // =========================
@@ -60,9 +90,7 @@ class UploadController extends Controller
             return $this->generateFullReport($upload, $revenue, $profit, $assets, $liabilities);
         }
 
-        // =========================
-        // 📄 PDF ANALYSIS (FIXED)
-        // =========================
+    
         if ($ext === 'pdf') {
             try {
                 $parser = new Parser();
@@ -148,11 +176,11 @@ class UploadController extends Controller
 
         // 🔥 INSIGHT
         if ($profitMargin > 25) {
-            $insight = "Perusahaan sangat profitable 🚀";
+            $insight = "Perusahaan sangat profitable ";
         } elseif ($profitMargin > 10) {
-            $insight = "Performa cukup stabil 👍";
+            $insight = "Performa cukup stabil ";
         } else {
-            $insight = "Profit rendah, perlu evaluasi ⚠️";
+            $insight = "Profit rendah, perlu evaluasi ";
         }
 
         if ($debtRatio > 70) {
@@ -174,7 +202,7 @@ class UploadController extends Controller
 
         return response()->json([
             'message' => 'Analisis lengkap berhasil 🚀',
-            'data'    => $upload,
+            'data'    => $upload->load('user'),
             'report'  => [
                 'revenue'       => $revenue,
                 'profit'        => $profit,
