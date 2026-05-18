@@ -5,35 +5,64 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\AdminController;
 
-/*
-|--------------------------------------------------------------------------
-| PUBLIC ROUTES
-|--------------------------------------------------------------------------
-*/
+// =========================
+// AUTH
+// =========================
 Route::post('/login', [AuthController::class, 'login']);
+
 Route::post('/register', [AuthController::class, 'register']);
 
-/*
-|--------------------------------------------------------------------------
-| AUTH ROUTES (SANCTUM)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth:sanctum'])->group(function () {
 
-    /*
-    |---------------- USER ROUTES
-    */
+// =========================
+// USER
+// =========================
+Route::middleware('auth:sanctum')->group(function () {
+
+    // USER UPLOADS
     Route::get('/uploads', [UploadController::class, 'index']);
+
     Route::post('/upload', [UploadController::class, 'store']);
-
-    /*
-    |---------------- ADMIN ROUTES
-    | NOTE: nanti idealnya tambah middleware role admin
-    */
-    Route::prefix('admin')->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'dashboard']);
-        Route::get('/users', [AdminController::class, 'users']);
-        Route::get('/uploads', [AdminController::class, 'uploads']);
-    });
-
 });
+
+
+// =========================
+// ADMIN
+// =========================
+Route::prefix('admin')
+    ->middleware('auth:sanctum')
+    ->group(function () {
+
+        // DASHBOARD
+        Route::get(
+            '/dashboard',
+            [AdminController::class, 'dashboard']
+        );
+
+        // USERS
+        Route::get(
+            '/users',
+            [AdminController::class, 'users']
+        );
+
+        Route::put(
+            '/users/{id}',
+            [AdminController::class, 'updateUser']
+        );
+
+        Route::delete(
+            '/users/{id}',
+            [AdminController::class, 'deleteUser']
+        );
+
+        // UPLOADS
+        Route::get(
+            '/uploads',
+            [AdminController::class, 'uploads']
+        );
+
+        // 🔥 DELETE UPLOAD
+        Route::delete(
+            '/uploads/{id}',
+            [AdminController::class, 'deleteUpload']
+        );
+    });
